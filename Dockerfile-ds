@@ -1,10 +1,10 @@
 # build a domain-server using vircadia-builder
-FROM domain-server-build-base as domain-server-build
+FROM overte-server-build-base as domain-server-build
 
 RUN echo UTC >/etc/timezone
 
 # The tag to pull from the Project Athena source repository.
-ARG REPO=https://github.com/vircadia/vircadia
+ARG REPO=https://github.com/overte-org/overte
 ARG TAG=master
 
 # Tell the libraries not to use the interactive dialogs
@@ -17,7 +17,7 @@ FROM ubuntu:20.04 as domain-server-run
 RUN echo UTC >/etc/timezone
 
 # The tag to pull from the Project Athena source repository. (Note defn in previous stage)
-ARG REPO=https://github.com/vircadia/vircadia
+ARG REPO=https://github.com/overte-org/overte
 ARG TAG=master
 
 # Tell the libraries not to use the interactive dialogs
@@ -26,15 +26,18 @@ ENV TERM linux
 
 RUN adduser --disabled-password --gecos 'domain-server user' cadia
 
-RUN mkdir -p /opt/vircadia/install_master \
-    && mkdir -p /opt/vircadia/version \
-    && mkdir -p /opt/vircadia/qt5-install/lib \
-    && chown -R cadia:cadia /opt/vircadia
+RUN chmod 777 /root \
+    && mkdir -p /root/Overte/install_master \
+    && mkdir -p /root/Overte/version \
+    && mkdir -p /root/overte-files/qt/qt5-install/lib \
+    && chown -R cadia:cadia /root/Overte
+    
+COPY --from=domain-server-build --chown=cadia:cadia /root/overte-files/qt/qt5-install/lib /root/overte-files/qt/qt5-install/lib
+COPY --from=domain-server-build --chown=cadia:cadia /root/Overte/vcpkg/c6a9ca9f/installed/x64-linux/lib /root/Overte/vcpkg/c6a9ca9f/installed/x64-linux/lib
+COPY --from=domain-server-build --chown=cadia:cadia /root/Overte/install_master /root/Overte/install_master
+COPY --from=domain-server-build --chown=cadia:cadia /root/Overte/builder-deps.txt /root/Overte/
+COPY --from=domain-server-build --chown=cadia:cadia /root/Overte/version /root/Overte/version
 
-COPY --from=domain-server-build --chown=cadia:cadia /opt/vircadia/qt5-install/lib /opt/vircadia/qt5-install/lib
-COPY --from=domain-server-build --chown=cadia:cadia /opt/vircadia/install_master /opt/vircadia/install_master
-COPY --from=domain-server-build --chown=cadia:cadia /opt/vircadia/builder-deps.txt /opt/vircadia/
-COPY --from=domain-server-build --chown=cadia:cadia /opt/vircadia/version /opt/vircadia/version
 # The service definitions are built and hidden in /root/.config
 COPY --from=domain-server-build --chown=cadia:cadia /root/.config /home/cadia/.config
 
@@ -42,36 +45,9 @@ COPY --from=domain-server-build --chown=cadia:cadia /root/.config /home/cadia/.c
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y vim \
-    && apt-get install -y $(cat /opt/vircadia/builder-deps.txt) \
+    && apt-get install -y $(cat /root/Overte/builder-deps.txt) \
     && apt-get clean \
     && rm -rf /var/lib/app/lists/*
-
-# Get the builder
-# ADD https://api.github.com/repos/vircadia/vircadia-builder/git/refs/heads/master vircadia-builder-git-version.json
-# RUN cd /opt/vircadia \
-#     && git clone https://github.com/vircadia/vircadia-builder.git \
-#     && cd vircadia-builder \
-#     && chmod +x vircadia-builder
-
-# Build the server pieces
-# ENV VIRCADIA_USE_SYSTEM_QT=true
-# RUN cd /opt/vircadia/vircadia-builder \
-#     && ./vircadia-builder \
-#             --repo=$REPO \
-#             --tag=$TAG \
-#             --destdir /opt/vircadia \
-#             --build=domain-server,assignment-client,ice-server \
-#             --release-type=production \
-#             --skip-systemd-restart \
-#             --auto
-
-# vircadia-builder puts the built image into 'install_$TAG'. Move to "install_master" so later code is simplier
-# RUN if [ "$TAG" != "master" ] ; then mv /opt/vircadia/vircadia_20* /opt/vircadia/install_master ; fi
-
-# Add the version of vircadia that was built
-# COPY files/buildVersion.sh /tmp
-# RUN mkdir -p /opt/vircadia/version \
-#     && /tmp/buildVersion.sh /opt/vircadia/source /opt/vircadia/version $TAG
 
 USER cadia:cadia
 

@@ -1,11 +1,12 @@
-# build a domain-server using vircadia-builder
-FROM ubuntu:20.04 as domain-server-build
+# build a domain-server using overte-builder
+FROM ubuntu:20.04 as overte-server-build
 
 RUN echo UTC >/etc/timezone
 
 # The tag to pull from the Project Athena source repository. (Note defn in next stage)
-ARG REPO=https://github.com/vircadia/vircadia
+ARG REPO=https://github.com/overte-org/overte
 ARG TAG=master
+ARG OVERTE_HOME=/root/Overte
 
 # Tell the libraries not to use the interactive dialogs
 ARG DEBIAN_FRONTEND=noninteractive
@@ -15,69 +16,63 @@ RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y git vim libfindbin-libs-perl sudo
 
-RUN mkdir -p /var/lib/vircadia
-RUN mkdir -p /opt/vircadia
+RUN mkdir -p /var/lib/overte
+RUN mkdir -p /root/Overte
 
-#    && git clone --branch feature-optSkipSystemdRestart https://github.com/misterblue/vircadia-builder.git \
 # Get the builder
-ADD https://api.github.com/repos/vircadia/vircadia-builder/git/refs/heads/master vircadia-builder-git-version.json
-RUN cd /opt/vircadia \
-    && git clone https://github.com/vircadia/vircadia-builder.git \
-    && cd vircadia-builder \
-    && chmod +x vircadia-builder
+ADD https://api.github.com/repos/overte-org/overte-builder/git/refs/heads/master overte-builder-git-version.json
+RUN cd /root/Overte \
+    && git clone https://github.com/overte-org/overte-builder.git \
+    && cd overte-builder \
+    && chmod +x overte-builder
 
 # Load the required libraries (the first time just loads packages)
-# ADD https://api.github.com/repos/vircadia/vircadia/git/refs/heads/${TAG} vircadia-git-version.json
-RUN cd /opt/vircadia/vircadia-builder \
-    && ./vircadia-builder \
+RUN cd /root/Overte/overte-builder \
+    && ./overte-builder \
             --repo=$REPO \
             --tag=$TAG \
-            --build=domain-server,assignment-client,ice-server \
+            --build=domain-server,ice-server,assignment-client \
             --release-type=production \
-            --destdir /opt/vircadia \
+            --destdir $OVERTE_HOME \
             --auto
 
 # Create a list of all the source dependencies needed for later phase
-RUN cd /opt/vircadia/vircadia-builder \
-    && ./vircadia-builder \
+RUN cd /root/Overte/overte-builder \
+    && ./overte-builder \
             --repo=$REPO \
             --tag=$TAG \
-            --destdir /opt/vircadia \
+            --destdir $OVERTE_HOME \
             --keep-source \
             --get-source-deps ubuntu-20.04 \
             --release-type=production \
-            --auto > /opt/vircadia/builder-deps.txt
+            --auto > /root/Overte/builder-deps.txt
 
-# If using the system Qt, get the dependencies for that for later loading
-# NOTE: this is an attempt to integrate the system Qt. For the moment, require building Qt
-# RUN if [ ! -d /opt/vircadia/qt5-install ] ; then \
-#         cd /opt/vircadia/vircadia-builder \
-#         && ./vircadia-builder \
-#             --repo=$REPO \
-#             --tag=$TAG \
-#             --destdir /opt/vircadia \
-#             --keep-source \
-#             --get-system-qt-deps >> /opt/vircadia/builder-deps.txt ; \
-#     fi
+RUN git clone $REPO $OVERTE_HOME/source \
+    && cd $OVERTE_HOME/source \
+    && git checkout $TAG
 
 # Build the server pieces
-ADD https://api.github.com/repos/vircadia/vircadia/git/refs/heads/$TAG vircadia-git-version.json
-RUN cd /opt/vircadia/vircadia-builder \
-    && ./vircadia-builder \
+RUN cd /root/Overte/overte-builder \
+    && sed -i "s/'has_binary_qt_package' => 0/'has_binary_qt_package' => 1/g" distros/ubuntu-20.04.cfg
+
+RUN cd /root/Overte/overte-builder \
+    && export OVERTE_USE_QT_VERSION=5.15.5 \
+    && ./overte-builder \
             --repo=$REPO \
             --tag=$TAG \
-            --destdir /opt/vircadia \
+            --destdir $OVERTE_HOME \
             --keep-source \
-            --build=domain-server,assignment-client,ice-server \
+            --build=server \
             --release-type=production \
             --skip-systemd-restart \
+            --optimization-level=compatible \
             --auto
 
-# vircadia-builder puts the built image into 'install-$TAG'. Move to "install-master" so later code is simplier
-RUN if [ ! -d /opt/vircadia/install-master ] ; then \
-        mv /opt/vircadia/vircadia_20* /opt/vircadia/install_master ; \
+# overte-builder puts the built image into 'install-$TAG'. Move to "install-master" so later code is simplier
+RUN if [ ! -d /root/Overte/install_master ] ; then \
+        mv /root/Overte/overte_20* /root/Overte/install_master ; \
     fi
 
 COPY files/buildVersion.sh /tmp
-RUN mkdir -p /opt/vircadia/version \
-    && /tmp/buildVersion.sh /opt/vircadia/source /opt/vircadia/version $TAG
+RUN mkdir -p /root/Overte/version \
+    && /tmp/buildVersion.sh /root/Overte/source /root/Overte/version $TAG

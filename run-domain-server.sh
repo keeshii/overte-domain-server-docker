@@ -14,17 +14,17 @@
 #    pointing to the metaverse-server at "https://metaverse.vircadia.com/live"
 #    and ICE server "ice.vircadia.com:7337"..
 
-export METAVERSE_URL=${METAVERSE_URL:-https://metaverse.vircadia.com/live}
+export METAVERSE_URL=${METAVERSE_URL:-https://mv.overte.org/server}
 if [[ ! -z "$1" ]] ; then
     METAVERSE_URL=$1
 fi
-export ICE_SERVER=${ICE_SERVER:-ice.vircadia.com:7337}
+export ICE_SERVER=${ICE_SERVER:-ice.overte.org:7337}
 if [[ ! -z "$2" ]] ; then
     ICE_SERVER=$2
 fi
 
-export DOCKER_REPOSITORY=${DOCKER_REPOSITORY:-misterblue}
-export IMAGE_NAME=${IMAGE_NAME:-vircadia-domain-server}
+export DOCKER_REPOSITORY="LOCAL"
+export IMAGE_NAME="overte-domain-server"
 export IMAGE_VERSION=${IMAGE_VERSION:-latest}
 if [[ "${DOCKER_REPOSITORY}" == "LOCAL" ]] ; then
     export DOCKER_IMAGE=${IMAGE_NAME}:${IMAGE_VERSION}
@@ -34,6 +34,12 @@ fi
 
 # There can be multiple domain-servers on one host. This is the default index
 export INSTANCE=0
+
+# Disable logs
+export DISABLE_LOGS=""
+
+# Disable ICE server
+export DISABLE_ICE_SERVER=1
 
 # Get the directory that this script is running from
 BASE="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd )"
@@ -69,6 +75,8 @@ docker run \
         -e METAVERSE_URL=$METAVERSE_URL \
         -e ICE_SERVER=$ICE_SERVER \
         -e INSTANCE=$INSTANCE \
+        -e DISABLE_LOGS=$DISABLE_LOGS \
+        -e DISABLE_ICE_SERVER=$DISABLE_ICE_SERVER \
         --network=host \
         --volume ${DOTLOCALDIR}:/home/cadia/.local \
         --volume ${LOGDIR}:/home/cadia/logs \

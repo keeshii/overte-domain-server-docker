@@ -19,8 +19,8 @@
 #               "VERSION_TAG": "TAG-YYYYMMDD-xxxxxxxx"
 #           }
 
-SRCDIR=${1:-/opt/vircadia/source}
-VERDIR=${2:-/opt/vircadia/version}
+SRCDIR=${1:-/root/Overte/source}
+VERDIR=${2:-/root/Overte/version}
 GIT_TAG=${3:-master}
 
 VERFILE=VERSION.json

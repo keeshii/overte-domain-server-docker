@@ -1,7 +1,7 @@
 #! /bin/bash
 
-export HIFI_METAVERSE_URL=${METAVERSE_URL:-https://metaverse.vircadia.com/live}
-export ICE_SERVER_URL=${ICE_SERVER:-ice.vircadia.com:7337}
+export HIFI_METAVERSE_URL=${METAVERSE_URL:-https://mv.overte.org/server}
+export ICE_SERVER_URL=${ICE_SERVER:-ice.overte.org:7337}
 
 # If running multiple domain-servers on one computer, the ports must be different.
 # The following code creates blocks of ports for each domain-server instance.
@@ -16,10 +16,18 @@ LOGDIR=/home/cadia/logs
 mkdir -p "${LOGDIR}"
 
 LOGDATE=$(date --utc "+%Y%m%d.%H%M")
-LOGFILE=${LOGDIR}/domain-server-${LOGDATE}
-ALOGFILE=${LOGDIR}/assignment-${LOGDATE}
 
-RUNDIR=/opt/vircadia/install_master
+if [[ -z "$DISABLE_LOGS" ]] ; then
+  LOGFILE=${LOGDIR}/domain-server-${LOGDATE}-A.log
+  ALOGFILE=${LOGDIR}/assignment-${LOGDATE}.log
+  ILOGFILE=${LOGDIR}/ice-server-${LOGDATE}.log
+else
+  LOGFILE=/dev/null
+  ALOGFILE=/dev/null
+  ILOGFILE=/dev/null
+fi
+
+RUNDIR=/root/Overte/install_master
 
 DOMAIN_SERVER_BASE=$(( 40100 + $INSTANCE * 10 ))
 ASSIGNMENT_BASE=$(( 48000 + $INSTANCE * 10 ))
@@ -35,7 +43,7 @@ DOMAIN_SERVER_PORT=$(( $DOMAIN_SERVER_BASE + 2 ))
     echo "   DOMAIN_SERVER_PORT=${DOMAIN_SERVER_PORT}"
     echo "   DOMAIN_SERVER_BASE=${DOMAIN_SERVER_BASE}"
     echo "   ASSIGNMENT_BASE=${ASSIGNMENT_BASE}"
-) >> "${LOGFILE}.log"
+) >> "${LOGFILE}"
 
 cd "${RUNDIR}"
 
@@ -47,8 +55,13 @@ cd "${RUNDIR}"
 #./run_assignment-client -t 4 -p $(( $ASSIGNMENT_BASE + 4 )) --server-port ${DOMAIN_SERVER_PORT} >> "${ALOGFILE}-4.log" 2>&1 &
 #./run_assignment-client -t 2 -p $(( $ASSIGNMENT_BASE + 2 )) --server-port ${DOMAIN_SERVER_PORT} --max 60 >> "${ALOGFILE}-2.log" 2>&1 &
 
-./run_assignment-client -p $ASSIGNMENT_BASE --server-port ${DOMAIN_SERVER_PORT} --max 20 >> "${ALOGFILE}-A.log" 2>&1 &
+if [[ -z "$DISABLE_ICE_SERVER" ]] ; then
+  ./run_ice-server --url ${HIFI_METAVERSE_URL} >> "${ILOGFILE}" 2>&1 &
+  sleep 1
+fi
+
+./run_assignment-client -p $ASSIGNMENT_BASE --server-port ${DOMAIN_SERVER_PORT} --max 20 >> "${ALOGFILE}" 2>&1 &
 
 sleep 3
 
-./run_domain-server -i ${ICE_SERVER_URL} >> "${LOGFILE}.log" 2>&1
+./run_domain-server -i ${ICE_SERVER_URL} >> "${LOGFILE}" 2>&1

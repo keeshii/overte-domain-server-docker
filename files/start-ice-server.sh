@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export HIFI_METAVERSE_URL=${METAVERSE_URL:-https://metaverse.vircadia.com/live}
+export HIFI_METAVERSE_URL=${METAVERSE_URL:-https://mv.overte.org/server}
 
 LOGDIR=/home/cadia/logs
 mkdir -p "${LOGDIR}"
@@ -8,7 +8,7 @@ mkdir -p "${LOGDIR}"
 LOGDATE=$(date --utc "+%Y%m%d.%H%M")
 LOGFILE=${LOGDIR}/ice-server-${LOGDATE}
 
-RUNDIR=/opt/vircadia/install_master
+RUNDIR=/root/Overte/install_master
 
 cd "${RUNDIR}"
 
