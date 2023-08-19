@@ -17,7 +17,7 @@ mkdir -p "${LOGDIR}"
 
 LOGDATE=$(date --utc "+%Y%m%d.%H%M")
 
-if [[ -z "$DISABLE_LOGS" ]] ; then
+if [ -z "$DISABLE_LOGS" ] || [ "$DISABLE_LOGS" = "0" ] ; then
   LOGFILE=${LOGDIR}/domain-server-${LOGDATE}-A.log
   ALOGFILE=${LOGDIR}/assignment-${LOGDATE}.log
   ILOGFILE=${LOGDIR}/ice-server-${LOGDATE}.log
@@ -55,7 +55,7 @@ cd "${RUNDIR}"
 #./run_assignment-client -t 4 -p $(( $ASSIGNMENT_BASE + 4 )) --server-port ${DOMAIN_SERVER_PORT} >> "${ALOGFILE}-4.log" 2>&1 &
 #./run_assignment-client -t 2 -p $(( $ASSIGNMENT_BASE + 2 )) --server-port ${DOMAIN_SERVER_PORT} --max 60 >> "${ALOGFILE}-2.log" 2>&1 &
 
-if [[ -z "$DISABLE_ICE_SERVER" ]] ; then
+if [ -z "$DISABLE_ICE_SERVER" ] || [ "$DISABLE_ICE_SERVER" = "0" ] ; then
   ./run_ice-server --url ${HIFI_METAVERSE_URL} >> "${ILOGFILE}" 2>&1 &
   sleep 1
 fi

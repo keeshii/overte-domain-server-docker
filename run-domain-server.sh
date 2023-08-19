@@ -24,7 +24,7 @@ if [[ ! -z "$2" ]] ; then
 fi
 
 export DOCKER_REPOSITORY="LOCAL"
-export IMAGE_NAME="overte-domain-server"
+export IMAGE_NAME="keeshii/overte-domain-server"
 export IMAGE_VERSION=${IMAGE_VERSION:-latest}
 if [[ "${DOCKER_REPOSITORY}" == "LOCAL" ]] ; then
     export DOCKER_IMAGE=${IMAGE_NAME}:${IMAGE_VERSION}
@@ -36,7 +36,7 @@ fi
 export INSTANCE=0
 
 # Disable logs
-export DISABLE_LOGS=""
+export DISABLE_LOGS=0
 
 # Disable ICE server
 export DISABLE_ICE_SERVER=1
