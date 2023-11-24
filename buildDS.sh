@@ -22,4 +22,4 @@ docker build -f Dockerfile-ds \
     --build-arg REPO=${BUILDREPO} \
     --build-arg TAG=${BUILDTAG} \
     ${NOCACHE} \
-    -t keeshii/overte-domain-server . | tee out.buildDS 2>&1
+    -t overte-domain-server . | tee out.buildDS 2>&1

@@ -23,8 +23,8 @@ if [[ ! -z "$2" ]] ; then
     ICE_SERVER=$2
 fi
 
-export DOCKER_REPOSITORY="LOCAL"
-export IMAGE_NAME="keeshii/overte-domain-server"
+export DOCKER_REPOSITORY=${DOCKER_REPOSITORY:-keeshii}
+export IMAGE_NAME=${IMAGE_NAME:-overte-domain-server}
 export IMAGE_VERSION=${IMAGE_VERSION:-latest}
 if [[ "${DOCKER_REPOSITORY}" == "LOCAL" ]] ; then
     export DOCKER_IMAGE=${IMAGE_NAME}:${IMAGE_VERSION}

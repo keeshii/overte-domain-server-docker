@@ -4,11 +4,11 @@
 
 # The repository image name can be over-ridden with the environment variable REPO_IMAGE.
 
-export DOCKER_REPOSITORY=${DOCKER_REPOSITORY:-misterblue}
-export IMAGE_NAME=${IMAGE_NAME:-vircadia-domain-server}
+export DOCKER_REPOSITORY=${DOCKER_REPOSITORY:-keeshii}
+export IMAGE_NAME=${IMAGE_NAME:-overte-domain-server}
 export IMAGE_VERSION=${IMAGE_VERSION:-latest}
 
-VERSIONLABEL=$(docker run --rm --entrypoint /home/cadia/getVersion.sh vircadia-domain-server VERSION_TAG)
+VERSIONLABEL=$(docker run --rm --entrypoint /home/cadia/getVersion.sh ${IMAGE_NAME} VERSION_TAG)
 
 echo "Pushing docker image for domain-server version ${VERSIONLABEL}"
 
